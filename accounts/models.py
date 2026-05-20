@@ -27,6 +27,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "mobile"
 
+    REQUIRED_FIELDS = ["first_name", "last_name"]
+
     objects = UserManager()
 
     def __str__(self):
