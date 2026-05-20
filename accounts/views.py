@@ -6,6 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
 from activity_logs.services import create_log
+from django.contrib.auth import login
 
 class MobileTokenSerializer(TokenObtainPairSerializer):
     username_field = "mobile"
@@ -18,6 +19,10 @@ class MobileTokenView(TokenObtainPairView):
         user = User.objects.filter(mobile=request.data.get("mobile")).first()
         if user:
             create_log(user, "LOGIN", "ACCOUNT", user.id, user.mobile)
+
+            # for session auth
+            login(request, user)
+
         return response
 
 class RegisterView(generics.CreateAPIView):
