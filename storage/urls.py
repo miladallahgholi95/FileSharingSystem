@@ -5,7 +5,7 @@ urlpatterns = [
     path("drive/root", RootDriveView.as_view()),
     path("drive/folders/<int:pk>", FolderContentView.as_view()),
 
-    path("folders/create/", FolderCreateView.as_view()),
+    path("folders/create", FolderCreateView.as_view()),
     path("folders/<int:pk>", FolderUpdateDeleteView.as_view()),
     path("folders/<int:pk>/share", FolderShareView.as_view()),
 
