@@ -9,7 +9,7 @@ urlpatterns = [
     path("folders/<int:pk>", FolderUpdateDeleteView.as_view()),
     path("folders/<int:pk>/share", FolderShareView.as_view()),
 
-    path("files/upload/", FileCreateView.as_view()),
+    path("files/upload", FileCreateView.as_view()),
     path("files/<int:pk>", FileUpdateDeleteView.as_view()),
     path("files/<int:pk>/download", FileDownloadView.as_view()),
     path("files/<int:pk>/share", FileShareView.as_view()),
