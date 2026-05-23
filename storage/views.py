@@ -215,12 +215,13 @@ class FolderShareView(APIView):
         serializer = ShareSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_ids = serializer.validated_data["user_ids"]
+        user_ids = set(serializer.validated_data["user_ids"])
         user_access_levels = serializer.validated_data["user_access_levels"]
 
         users = User.objects.filter(id__in=user_ids)
         user_map = {u.id: u for u in users}
 
+        # 1. create/update
         for user_id, access_level in zip(user_ids, user_access_levels):
 
             user = user_map.get(user_id)
@@ -236,18 +237,14 @@ class FolderShareView(APIView):
                 }
             )
 
-        create_log(
-            request.user,
-            "SHARE_FOLDER",
-            "FOLDER",
-            folder.id,
-            folder.name
-        )
+        # 2. DELETE missing users (IMPORTANT PART)
+        FolderPermission.objects.filter(
+            folder=folder
+        ).exclude(
+            user_id__in=user_ids
+        ).delete()
 
-        return Response({
-            "detail": "Shared",
-            "shared_count": len(user_map)
-        })
+        return Response({"detail": "Synced"})
 
 class FileShareView(APIView):
     def post(self, request, pk):
@@ -257,12 +254,13 @@ class FileShareView(APIView):
         serializer = ShareSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_ids = serializer.validated_data["user_ids"]
+        user_ids = set(serializer.validated_data["user_ids"])
         user_access_levels = serializer.validated_data["user_access_levels"]
 
         users = User.objects.filter(id__in=user_ids)
         user_map = {u.id: u for u in users}
 
+        # 1. ADD / UPDATE permissions
         for user_id, access_level in zip(user_ids, user_access_levels):
 
             user = user_map.get(user_id)
@@ -278,6 +276,13 @@ class FileShareView(APIView):
                 }
             )
 
+        # 2. DELETE removed users (SYNC STEP)
+        FilePermission.objects.filter(
+            file=file_obj
+        ).exclude(
+            user_id__in=user_ids
+        ).delete()
+
         create_log(
             request.user,
             "SHARE_FILE",
@@ -287,7 +292,7 @@ class FileShareView(APIView):
         )
 
         return Response({
-            "detail": "Shared",
+            "detail": "Synced",
             "shared_count": len(user_map)
         })
 
