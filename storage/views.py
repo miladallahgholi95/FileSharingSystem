@@ -209,40 +209,88 @@ class FileDownloadView(APIView):
 
 class FolderShareView(APIView):
     def post(self, request, pk):
+
         folder = Folder.objects.get(pk=pk)
+
         serializer = ShareSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        permission, _ = FolderPermission.objects.update_or_create(
-            user=User.objects.get(pk=serializer.validated_data["user_id"]),
-            folder=folder,
-            defaults={
-                "access_level": serializer.validated_data["access_level"],
-                "shared_by": request.user
-            }
+        user_ids = serializer.validated_data["user_ids"]
+        user_access_levels = serializer.validated_data["user_access_levels"]
+
+        users = User.objects.filter(id__in=user_ids)
+
+        user_map = {u.id: u for u in users}
+
+        for user_id, access_level in zip(user_ids, user_access_levels):
+
+            user = user_map.get(user_id)
+            if not user:
+                continue
+
+            FolderPermission.objects.update_or_create(
+                user=user,
+                folder=folder,
+                defaults={
+                    "access_level": access_level,
+                    "shared_by": request.user
+                }
+            )
+
+        create_log(
+            request.user,
+            "SHARE_FOLDER",
+            "FOLDER",
+            folder.id,
+            folder.name
         )
 
-        create_log(request.user, "SHARE_FOLDER", "FOLDER", folder.id, folder.name)
-        return Response({"detail":"Shared"})
+        return Response({
+            "detail": "Shared",
+            "shared_count": len(user_map)
+        })
 
 class FileShareView(APIView):
     def post(self, request, pk):
+
         file_obj = File.objects.get(pk=pk)
+
         serializer = ShareSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        FilePermission.objects.update_or_create(
-            user=User.objects.get(pk=serializer.validated_data["user_id"]),
-            file=file_obj,
-            defaults={
-                "access_level": serializer.validated_data["access_level"],
-                "shared_by": request.user
-            }
+        user_ids = serializer.validated_data["user_ids"]
+        user_access_levels = serializer.validated_data["user_access_levels"]
+
+        users = User.objects.filter(id__in=user_ids)
+        user_map = {u.id: u for u in users}
+
+        for user_id, access_level in zip(user_ids, user_access_levels):
+
+            user = user_map.get(user_id)
+            if not user:
+                continue
+
+            FilePermission.objects.update_or_create(
+                user=user,
+                file=file_obj,
+                defaults={
+                    "access_level": access_level,
+                    "shared_by": request.user
+                }
+            )
+
+        create_log(
+            request.user,
+            "SHARE_FILE",
+            "FILE",
+            file_obj.id,
+            file_obj.name
         )
 
-        create_log(request.user, "SHARE_FILE", "FILE", file_obj.id, file_obj.name)
-        return Response({"detail":"Shared"})
-
+        return Response({
+            "detail": "Shared",
+            "shared_count": len(user_map)
+        })
 
 class FolderStarView(APIView):
     def post(self, request, pk):

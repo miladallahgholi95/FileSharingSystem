@@ -35,5 +35,27 @@ class FileSerializer(serializers.ModelSerializer):
         }
 
 class ShareSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
-    access_level = serializers.ChoiceField(choices=["VIEW","EDIT"])
+    user_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False
+    )
+
+    user_access_levels = serializers.ListField(
+        child=serializers.ChoiceField(choices=["VIEW", "EDIT"]),
+        allow_empty=False
+    )
+
+    def validate(self, attrs):
+        user_ids = attrs.get("user_ids")
+        user_access_levels = attrs.get("user_access_levels")
+
+        if not user_access_levels:
+            attrs["user_access_levels"] = ["VIEW"] * len(user_ids)
+            return attrs
+
+        if len(user_ids) != len(user_access_levels):
+            raise serializers.ValidationError(
+                "user_ids and user_access_levels must have same length"
+            )
+
+        return attrs
