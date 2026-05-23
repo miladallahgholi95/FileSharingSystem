@@ -19,6 +19,8 @@ class RootDriveView(APIView):
         sort = request.GET.get("sort", "name")
         order = request.GET.get("order", "asc")
 
+        owned = request.GET.get("owned")
+
         folders = Folder.objects.filter(
             Q(owner=request.user) |
             Q(folderpermission__user=request.user),
@@ -31,6 +33,19 @@ class RootDriveView(APIView):
             folder=None
         )
 
+        # OWNED FILTER
+        if owned is not None:
+
+            is_owned = owned.lower() == "true"
+
+            if is_owned:
+                folders = folders.filter(owner=request.user)
+                files = files.filter(owner=request.user)
+
+            else:
+                folders = folders.exclude(owner=request.user)
+                files = files.exclude(owner=request.user)
+
         # SEARCH
         if search:
             folders = folders.filter(name__icontains=search)
@@ -38,12 +53,13 @@ class RootDriveView(APIView):
 
         # STAR FILTER
         if starred is not None:
+
             is_starred = starred.lower() == "true"
 
             folders = folders.filter(is_starred=is_starred)
             files = files.filter(is_starred=is_starred)
 
-        # SORTING
+        # SORT
         allowed_sort_fields = {
             "name": "name",
             "owner": "owner__username",
@@ -80,7 +96,10 @@ class FolderContentView(APIView):
         access, _ = get_folder_access(request.user, folder)
 
         if not access:
-            return Response({"detail": "Forbidden"}, status=403)
+            return Response(
+                {"detail": "Forbidden"},
+                status=403
+            )
 
         search = request.GET.get("search")
         starred = request.GET.get("starred")
@@ -88,8 +107,23 @@ class FolderContentView(APIView):
         sort = request.GET.get("sort", "name")
         order = request.GET.get("order", "asc")
 
+        owned = request.GET.get("owned")
+
         folders = folder.folder_set.all()
         files = folder.file_set.all()
+
+        # OWNED FILTER
+        if owned is not None:
+
+            is_owned = owned.lower() == "true"
+
+            if is_owned:
+                folders = folders.filter(owner=request.user)
+                files = files.filter(owner=request.user)
+
+            else:
+                folders = folders.exclude(owner=request.user)
+                files = files.exclude(owner=request.user)
 
         # SEARCH
         if search:
@@ -98,12 +132,13 @@ class FolderContentView(APIView):
 
         # STAR FILTER
         if starred is not None:
+
             is_starred = starred.lower() == "true"
 
             folders = folders.filter(is_starred=is_starred)
             files = files.filter(is_starred=is_starred)
 
-        # SORTING
+        # SORT
         allowed_sort_fields = {
             "name": "name",
             "owner": "owner__username",
