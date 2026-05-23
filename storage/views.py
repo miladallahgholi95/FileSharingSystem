@@ -11,33 +11,70 @@ from activity_logs.services import create_log
 
 class RootDriveView(APIView):
     def get(self, request):
+        search = request.GET.get("search")
+
         folders = Folder.objects.filter(
             Q(owner=request.user) | Q(folderpermission__user=request.user),
             parent=None
-        ).distinct()
+        )
 
         files = File.objects.filter(
             Q(owner=request.user) | Q(filepermission__user=request.user),
             folder=None
-        ).distinct()
+        )
+
+        if search:
+            folders = folders.filter(name__icontains=search)
+            files = files.filter(name__icontains=search)
+
+        folders = folders.distinct()
+        files = files.distinct()
 
         return Response({
-            "folders": FolderSerializer(folders, many=True, context={"request":request}).data,
-            "files": FileSerializer(files, many=True, context={"request":request}).data,
+            "folders": FolderSerializer(
+                folders,
+                many=True,
+                context={"request": request}
+            ).data,
+
+            "files": FileSerializer(
+                files,
+                many=True,
+                context={"request": request}
+            ).data,
         })
 
 class FolderContentView(APIView):
     def get(self, request, pk):
         folder = Folder.objects.get(pk=pk)
+
         access, _ = get_folder_access(request.user, folder)
         if not access:
             return Response({"detail":"Forbidden"}, status=403)
 
+        search = request.GET.get("search")
+
+        folders = folder.folder_set.all()
+        files = folder.file_set.all()
+
+        if search:
+            folders = folders.filter(name__icontains=search)
+            files = files.filter(name__icontains=search)
+
         create_log(request.user, "VIEW_FOLDER", "FOLDER", folder.id, folder.name)
 
         return Response({
-            "folders": FolderSerializer(folder.folder_set.all(), many=True, context={"request":request}).data,
-            "files": FileSerializer(folder.file_set.all(), many=True, context={"request":request}).data,
+            "folders": FolderSerializer(
+                folders,
+                many=True,
+                context={"request":request}
+            ).data,
+
+            "files": FileSerializer(
+                files,
+                many=True,
+                context={"request":request}
+            ).data,
         })
 
 class FolderCreateView(generics.CreateAPIView):
