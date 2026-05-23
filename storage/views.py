@@ -3,6 +3,7 @@ from django.http import FileResponse
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .models import Folder, File, FolderPermission, FilePermission
 from .serializers import FolderSerializer, FileSerializer, ShareSerializer
 from .services import get_folder_access, get_file_access
@@ -240,3 +241,80 @@ class FileStarView(APIView):
             "detail": "File star updated",
             "is_starred": file_obj.is_starred
         })
+
+
+class FolderPermissionUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+
+        folder = Folder.objects.get(pk=pk)
+
+        access, _ = get_folder_access(request.user, folder)
+
+        if not access:
+            return Response(
+                {"detail": "Forbidden"},
+                status=403
+            )
+
+        users = User.objects.exclude(id=request.user.id)
+
+        permissions = FolderPermission.objects.filter(
+            folder=folder
+        )
+
+        permission_map = {
+            p.user_id: p.access_level
+            for p in permissions
+        }
+
+        data = []
+
+        for user in users:
+            data.append({
+                "id": user.id,
+                "username": user.username,
+                "has_access": user.id in permission_map,
+                "access_level": permission_map.get(user.id)
+            })
+
+        return Response(data)
+
+class FilePermissionUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+
+        file_obj = File.objects.get(pk=pk)
+
+        access, _ = get_file_access(request.user, file_obj)
+
+        if not access:
+            return Response(
+                {"detail": "Forbidden"},
+                status=403
+            )
+
+        users = User.objects.exclude(id=request.user.id)
+
+        permissions = FilePermission.objects.filter(
+            file=file_obj
+        )
+
+        permission_map = {
+            p.user_id: p.access_level
+            for p in permissions
+        }
+
+        data = []
+
+        for user in users:
+            data.append({
+                "id": user.id,
+                "username": user.username,
+                "has_access": user.id in permission_map,
+                "access_level": permission_map.get(user.id)
+            })
+
+        return Response(data)
