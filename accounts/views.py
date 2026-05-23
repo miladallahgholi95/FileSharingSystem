@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -57,3 +57,40 @@ class ChangePasswordView(APIView):
 
         create_log(request.user, "CHANGE_PASSWORD", "ACCOUNT", request.user.id, request.user.mobile)
         return Response({"detail":"Password updated"})
+
+
+class UsersListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+
+    search_fields = ["first_name", "last_name"]
+
+    def get_queryset(self):
+        queryset = User.objects.exclude(
+            id=self.request.user.id
+        )
+
+        # sort field
+        sort = self.request.query_params.get("sort", "last_name")
+
+        # order type
+        order = self.request.query_params.get("order", "asc")
+
+        # allowed fields
+        allowed_sorts = [
+            "first_name",
+            "last_name",
+            "mobile",
+            "created_at",
+            "date_joined",
+        ]
+
+        if sort not in allowed_sorts:
+            sort = "last_name"
+
+        # desc
+        if order == "desc":
+            sort = f"-{sort}"
+
+        return queryset.order_by(sort)
