@@ -13,10 +13,8 @@ class FolderSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         access, origin = get_folder_access(user, obj)
         return {
-            "is_owned_by_current_user": obj.owner == user,
-            "is_shared_with_current_user": origin is not None and origin != "OWNED",
-            "access_origin": origin,
-            "effective_access_level": access,
+            "owned": obj.owner == user,
+            "access_level": access,
         }
 
 class FileSerializer(serializers.ModelSerializer):
