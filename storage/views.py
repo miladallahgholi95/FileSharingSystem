@@ -11,24 +11,51 @@ from activity_logs.services import create_log
 
 class RootDriveView(APIView):
     def get(self, request):
+
         search = request.GET.get("search")
+        starred = request.GET.get("starred")
+
+        sort = request.GET.get("sort", "name")
+        order = request.GET.get("order", "asc")
 
         folders = Folder.objects.filter(
-            Q(owner=request.user) | Q(folderpermission__user=request.user),
+            Q(owner=request.user) |
+            Q(folderpermission__user=request.user),
             parent=None
         )
 
         files = File.objects.filter(
-            Q(owner=request.user) | Q(filepermission__user=request.user),
+            Q(owner=request.user) |
+            Q(filepermission__user=request.user),
             folder=None
         )
 
+        # SEARCH
         if search:
             folders = folders.filter(name__icontains=search)
             files = files.filter(name__icontains=search)
 
-        folders = folders.distinct()
-        files = files.distinct()
+        # STAR FILTER
+        if starred is not None:
+            is_starred = starred.lower() == "true"
+
+            folders = folders.filter(is_starred=is_starred)
+            files = files.filter(is_starred=is_starred)
+
+        # SORTING
+        allowed_sort_fields = {
+            "name": "name",
+            "owner": "owner__username",
+            "starred": "is_starred",
+        }
+
+        sort_field = allowed_sort_fields.get(sort, "name")
+
+        if order == "desc":
+            sort_field = f"-{sort_field}"
+
+        folders = folders.order_by(sort_field).distinct()
+        files = files.order_by(sort_field).distinct()
 
         return Response({
             "folders": FolderSerializer(
@@ -46,34 +73,69 @@ class RootDriveView(APIView):
 
 class FolderContentView(APIView):
     def get(self, request, pk):
+
         folder = Folder.objects.get(pk=pk)
 
         access, _ = get_folder_access(request.user, folder)
+
         if not access:
-            return Response({"detail":"Forbidden"}, status=403)
+            return Response({"detail": "Forbidden"}, status=403)
 
         search = request.GET.get("search")
+        starred = request.GET.get("starred")
+
+        sort = request.GET.get("sort", "name")
+        order = request.GET.get("order", "asc")
 
         folders = folder.folder_set.all()
         files = folder.file_set.all()
 
+        # SEARCH
         if search:
             folders = folders.filter(name__icontains=search)
             files = files.filter(name__icontains=search)
 
-        create_log(request.user, "VIEW_FOLDER", "FOLDER", folder.id, folder.name)
+        # STAR FILTER
+        if starred is not None:
+            is_starred = starred.lower() == "true"
+
+            folders = folders.filter(is_starred=is_starred)
+            files = files.filter(is_starred=is_starred)
+
+        # SORTING
+        allowed_sort_fields = {
+            "name": "name",
+            "owner": "owner__username",
+            "starred": "is_starred",
+        }
+
+        sort_field = allowed_sort_fields.get(sort, "name")
+
+        if order == "desc":
+            sort_field = f"-{sort_field}"
+
+        folders = folders.order_by(sort_field)
+        files = files.order_by(sort_field)
+
+        create_log(
+            request.user,
+            "VIEW_FOLDER",
+            "FOLDER",
+            folder.id,
+            folder.name
+        )
 
         return Response({
             "folders": FolderSerializer(
                 folders,
                 many=True,
-                context={"request":request}
+                context={"request": request}
             ).data,
 
             "files": FileSerializer(
                 files,
                 many=True,
-                context={"request":request}
+                context={"request": request}
             ).data,
         })
 
