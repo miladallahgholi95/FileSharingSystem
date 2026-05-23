@@ -274,7 +274,8 @@ class FolderPermissionUsersView(APIView):
         for user in users:
             data.append({
                 "id": user.id,
-                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "has_access": user.id in permission_map,
                 "access_level": permission_map.get(user.id)
             })
@@ -312,7 +313,8 @@ class FilePermissionUsersView(APIView):
         for user in users:
             data.append({
                 "id": user.id,
-                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "has_access": user.id in permission_map,
                 "access_level": permission_map.get(user.id)
             })
