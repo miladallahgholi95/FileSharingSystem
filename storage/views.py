@@ -107,3 +107,37 @@ class FileShareView(APIView):
 
         create_log(request.user, "SHARE_FILE", "FILE", file_obj.id, file_obj.name)
         return Response({"detail":"Shared"})
+
+
+class FolderStarView(APIView):
+    def post(self, request, pk):
+        folder = Folder.objects.get(pk=pk)
+
+        access, _ = get_folder_access(request.user, folder)
+        if not access:
+            return Response({"detail": "Forbidden"}, status=403)
+
+        folder.is_starred = not folder.is_starred
+        folder.save()
+
+        return Response({
+            "detail": "Folder star updated",
+            "is_starred": folder.is_starred
+        })
+
+
+class FileStarView(APIView):
+    def post(self, request, pk):
+        file_obj = File.objects.get(pk=pk)
+
+        access, _ = get_file_access(request.user, file_obj)
+        if not access:
+            return Response({"detail": "Forbidden"}, status=403)
+
+        file_obj.is_starred = not file_obj.is_starred
+        file_obj.save()
+
+        return Response({
+            "detail": "File star updated",
+            "is_starred": file_obj.is_starred
+        })

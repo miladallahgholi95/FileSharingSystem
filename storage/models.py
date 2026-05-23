@@ -10,6 +10,7 @@ class Folder(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_folders")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_folders")
     description = models.TextField(blank=True)
+    is_starred = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -22,6 +23,7 @@ class File(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_files")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_files")
     description = models.TextField(blank=True)
+    is_starred = models.BooleanField(default=False)
     file = models.FileField(upload_to="uploads/")
     extension = models.CharField(max_length=20)
     size = models.BigIntegerField()
