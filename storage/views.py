@@ -243,6 +243,37 @@ class FileStarView(APIView):
         })
 
 
+class FolderMyPermissionView(APIView):
+    def get(self, request, pk):
+
+        folder = Folder.objects.get(pk=pk)
+
+        permission = FolderPermission.objects.filter(
+            folder=folder,
+            user=request.user
+        ).first()
+
+        return Response({
+            "has_access": permission is not None,
+            "access_level": permission.access_level if permission else None
+        })
+
+class FileMyPermissionView(APIView):
+    def get(self, request, pk):
+
+        file_obj = File.objects.get(pk=pk)
+
+        permission = FilePermission.objects.filter(
+            file=file_obj,
+            user=request.user
+        ).first()
+
+        return Response({
+            "has_access": permission is not None,
+            "access_level": permission.access_level if permission else None
+        })
+
+
 class FolderPermissionUsersView(APIView):
     permission_classes = [IsAuthenticated]
 
