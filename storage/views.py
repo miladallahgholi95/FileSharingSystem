@@ -219,7 +219,6 @@ class FolderShareView(APIView):
         user_access_levels = serializer.validated_data["user_access_levels"]
 
         users = User.objects.filter(id__in=user_ids)
-
         user_map = {u.id: u for u in users}
 
         for user_id, access_level in zip(user_ids, user_access_levels):
