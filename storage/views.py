@@ -245,7 +245,9 @@ class FolderShareView(APIView):
             user_id__in=user_ids
         ).delete()
 
-        return Response({"detail": "Synced"})
+        return Response({
+            "detail": "Permission Updated"
+        })
 
 class FileShareView(APIView):
     def post(self, request, pk):
@@ -294,8 +296,7 @@ class FileShareView(APIView):
         )
 
         return Response({
-            "detail": "Synced",
-            "shared_count": len(user_map)
+            "detail": "Permission Updated"
         })
 
 class FolderStarView(APIView):
