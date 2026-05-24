@@ -218,24 +218,25 @@ class FolderShareView(APIView):
         user_ids = set(serializer.validated_data["user_ids"])
         user_access_levels = serializer.validated_data["user_access_levels"]
 
-        users = User.objects.filter(id__in=user_ids)
-        user_map = {u.id: u for u in users}
+        if len(user_ids) > 0:
+            users = User.objects.filter(id__in=user_ids)
+            user_map = {u.id: u for u in users}
 
-        # 1. create/update
-        for user_id, access_level in zip(user_ids, user_access_levels):
+            # 1. create/update
+            for user_id, access_level in zip(user_ids, user_access_levels):
 
-            user = user_map.get(user_id)
-            if not user:
-                continue
+                user = user_map.get(user_id)
+                if not user:
+                    continue
 
-            FolderPermission.objects.update_or_create(
-                user=user,
-                folder=folder,
-                defaults={
-                    "access_level": access_level,
-                    "shared_by": request.user
-                }
-            )
+                FolderPermission.objects.update_or_create(
+                    user=user,
+                    folder=folder,
+                    defaults={
+                        "access_level": access_level,
+                        "shared_by": request.user
+                    }
+                )
 
         # 2. DELETE missing users (IMPORTANT PART)
         FolderPermission.objects.filter(
@@ -257,24 +258,25 @@ class FileShareView(APIView):
         user_ids = set(serializer.validated_data["user_ids"])
         user_access_levels = serializer.validated_data["user_access_levels"]
 
-        users = User.objects.filter(id__in=user_ids)
-        user_map = {u.id: u for u in users}
+        if len(user_ids) > 0:
+            users = User.objects.filter(id__in=user_ids)
+            user_map = {u.id: u for u in users}
 
-        # 1. ADD / UPDATE permissions
-        for user_id, access_level in zip(user_ids, user_access_levels):
+            # 1. ADD / UPDATE permissions
+            for user_id, access_level in zip(user_ids, user_access_levels):
 
-            user = user_map.get(user_id)
-            if not user:
-                continue
+                user = user_map.get(user_id)
+                if not user:
+                    continue
 
-            FilePermission.objects.update_or_create(
-                user=user,
-                file=file_obj,
-                defaults={
-                    "access_level": access_level,
-                    "shared_by": request.user
-                }
-            )
+                FilePermission.objects.update_or_create(
+                    user=user,
+                    file=file_obj,
+                    defaults={
+                        "access_level": access_level,
+                        "shared_by": request.user
+                    }
+                )
 
         # 2. DELETE removed users (SYNC STEP)
         FilePermission.objects.filter(
