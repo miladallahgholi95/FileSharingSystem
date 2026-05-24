@@ -40,25 +40,32 @@ class ShareSerializer(serializers.Serializer):
         allow_empty=True
     )
 
-    # user_access_levels = serializers.ListField(
-    #     child=serializers.ChoiceField(choices=["VIEW", "EDIT"]),
-    #     allow_empty=False
-    # )
+    user_access_levels = serializers.ListField(
+        child=serializers.ChoiceField(choices=["VIEW", "EDIT"]),
+        required=False,
+        allow_empty=True
+    )
 
     def validate(self, attrs):
-        user_ids = attrs.get("user_ids")
 
-        # user_access_levels = attrs.get("user_access_levels")
+        user_ids = attrs.get("user_ids", [])
 
-        # if not user_access_levels:
-        #     attrs["user_access_levels"] = ["VIEW"] * len(user_ids)
-        #     return attrs
+        user_access_levels = attrs.get("user_access_levels",[])
 
-        # if len(user_ids) != len(user_access_levels):
-        #     raise serializers.ValidationError(
-        #         "user_ids and user_access_levels must have same length"
-        #     )
+        if not user_access_levels:
+            attrs["user_access_levels"] = ["VIEW"] * len(user_ids)
+            return attrs
 
-        attrs["user_access_levels"] = ["VIEW"] * len(user_ids)
+        if len(user_access_levels) < len(user_ids):
+            remain_count = len(user_ids) - len(user_access_levels)
+
+            user_access_levels.extend(["VIEW"] * remain_count)
+
+        elif len(user_access_levels) > len(user_ids):
+            raise serializers.ValidationError(
+                "user_access_levels length cannot be greater than user_ids length"
+            )
+
+        attrs["user_access_levels"] = user_access_levels
 
         return attrs
