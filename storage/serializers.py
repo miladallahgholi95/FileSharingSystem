@@ -16,7 +16,6 @@ class FolderSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_created_at_shamsi(self, obj):
-
         if obj.created_at:
             return jdatetime.datetime.fromgregorian(
                 datetime=obj.created_at
@@ -25,7 +24,6 @@ class FolderSerializer(serializers.ModelSerializer):
         return None
 
     def get_updated_at_shamsi(self, obj):
-
         if obj.updated_at:
             return jdatetime.datetime.fromgregorian(
                 datetime=obj.updated_at
@@ -63,21 +61,17 @@ class FileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_created_at_shamsi(self, obj):
-
         if obj.created_at:
             return jdatetime.datetime.fromgregorian(
                 datetime=obj.created_at
             ).strftime("%Y/%m/%d - %H:%M")
-
         return None
 
     def get_updated_at_shamsi(self, obj):
-
         if obj.updated_at:
             return jdatetime.datetime.fromgregorian(
                 datetime=obj.updated_at
             ).strftime("%Y/%m/%d - %H:%M")
-
         return None
 
     def get_visibility(self, obj):
