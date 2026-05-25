@@ -31,26 +31,18 @@ def get_file_access(user, file_obj):
     return None, None
 
 
-def is_folder_shared(folder, current_user):
+def is_folder_shared(folder):
 
-    if FolderPermission.objects.filter(
-        folder=folder
-    ).exclude(
-        user=current_user
-    ).exists():
+    if FolderPermission.objects.filter(folder=folder).exclude(user=folder.owner).exists():
         return True
 
-    if FilePermission.objects.filter(
-        file__folder=folder
-    ).exclude(
-        user=current_user
-    ).exists():
+    if FilePermission.objects.filter(file__folder=folder).exclude(user=folder.owner).exists():
         return True
 
     children = folder.folder_set.all()
 
     for child in children:
-        if is_folder_shared(child, current_user):
+        if is_folder_shared(child):
             return True
 
     return False
