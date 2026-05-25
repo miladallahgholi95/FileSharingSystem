@@ -12,9 +12,11 @@ class FolderSerializer(serializers.ModelSerializer):
     def get_visibility(self, obj):
         user = self.context["request"].user
         access, origin = get_folder_access(user, obj)
+        is_shared = FolderPermission.objects.filter(folder=obj).exclude(user=user).exists()
         return {
             "is_owned": obj.owner == user,
             "access_level": access,
+            "is_shared": is_shared
         }
 
 class FileSerializer(serializers.ModelSerializer):
@@ -27,11 +29,12 @@ class FileSerializer(serializers.ModelSerializer):
     def get_visibility(self, obj):
         user = self.context["request"].user
         access, origin = get_file_access(user, obj)
+        is_shared = FilePermission.objects.filter(folder=obj).exclude(user=user).exists()
         return {
             "is_owned": obj.owner == user,
             "access_level": access,
+            "is_shared": is_shared
         }
-
 class ShareSerializer(serializers.Serializer):
     user_ids = serializers.ListField(
         child=serializers.IntegerField(),
