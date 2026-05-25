@@ -62,7 +62,7 @@ class RootDriveView(APIView):
         # SORT
         allowed_sort_fields = {
             "name": "name",
-            "owner": "owner__username",
+            "owner": "owner__name",
             "starred": "is_starred",
             "created_at": "created_at",
         }
@@ -142,7 +142,7 @@ class FolderContentView(APIView):
         # SORT
         allowed_sort_fields = {
             "name": "name",
-            "owner": "owner__username",
+            "owner": "owner__name",
             "starred": "is_starred",
             "created_at": "created_at",
         }
