@@ -1,18 +1,50 @@
 from rest_framework import serializers
 from .models import Folder, File, FolderPermission, FilePermission
 from .services import get_folder_access, get_file_access
+import jdatetime
+
 
 class FolderSerializer(serializers.ModelSerializer):
+
     visibility = serializers.SerializerMethodField()
+
+    created_at_shamsi = serializers.SerializerMethodField()
+    updated_at_shamsi = serializers.SerializerMethodField()
 
     class Meta:
         model = Folder
         fields = "__all__"
 
+    def get_created_at_shamsi(self, obj):
+
+        if obj.created_at:
+            return jdatetime.datetime.fromgregorian(
+                datetime=obj.created_at
+            ).strftime("%Y/%m/%d - %H:%M")
+
+        return None
+
+    def get_updated_at_shamsi(self, obj):
+
+        if obj.updated_at:
+            return jdatetime.datetime.fromgregorian(
+                datetime=obj.updated_at
+            ).strftime("%Y/%m/%d - %H:%M")
+
+        return None
+
     def get_visibility(self, obj):
+
         user = self.context["request"].user
+
         access, origin = get_folder_access(user, obj)
-        is_shared = FolderPermission.objects.filter(folder=obj).exclude(user=user).exists()
+
+        is_shared = FolderPermission.objects.filter(
+            folder=obj
+        ).exclude(
+            user=user
+        ).exists()
+
         return {
             "is_owned": obj.owner == user,
             "access_level": access,
@@ -20,16 +52,46 @@ class FolderSerializer(serializers.ModelSerializer):
         }
 
 class FileSerializer(serializers.ModelSerializer):
+
     visibility = serializers.SerializerMethodField()
+
+    created_at_shamsi = serializers.SerializerMethodField()
+    updated_at_shamsi = serializers.SerializerMethodField()
 
     class Meta:
         model = File
         fields = "__all__"
 
+    def get_created_at_shamsi(self, obj):
+
+        if obj.created_at:
+            return jdatetime.datetime.fromgregorian(
+                datetime=obj.created_at
+            ).strftime("%Y/%m/%d - %H:%M")
+
+        return None
+
+    def get_updated_at_shamsi(self, obj):
+
+        if obj.updated_at:
+            return jdatetime.datetime.fromgregorian(
+                datetime=obj.updated_at
+            ).strftime("%Y/%m/%d - %H:%M")
+
+        return None
+
     def get_visibility(self, obj):
+
         user = self.context["request"].user
+
         access, origin = get_file_access(user, obj)
-        is_shared = FilePermission.objects.filter(folder=obj).exclude(user=user).exists()
+
+        is_shared = FilePermission.objects.filter(
+            file=obj
+        ).exclude(
+            user=user
+        ).exists()
+
         return {
             "is_owned": obj.owner == user,
             "access_level": access,

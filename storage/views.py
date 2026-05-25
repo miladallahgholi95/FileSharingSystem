@@ -64,6 +64,7 @@ class RootDriveView(APIView):
             "name": "name",
             "owner": "owner__username",
             "starred": "is_starred",
+            "created_at": "created_at",
         }
 
         sort_field = allowed_sort_fields.get(sort, "name")
@@ -143,6 +144,7 @@ class FolderContentView(APIView):
             "name": "name",
             "owner": "owner__username",
             "starred": "is_starred",
+            "created_at": "created_at",
         }
 
         sort_field = allowed_sort_fields.get(sort, "name")
