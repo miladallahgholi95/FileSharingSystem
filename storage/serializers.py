@@ -35,6 +35,7 @@ class FileSerializer(serializers.ModelSerializer):
             "access_level": access,
             "is_shared": is_shared
         }
+
 class ShareSerializer(serializers.Serializer):
     user_ids = serializers.ListField(
         child=serializers.IntegerField(),

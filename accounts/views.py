@@ -43,16 +43,19 @@ class LogoutView(APIView):
 
         serializer.save()
 
-        # session logout
-        logout(request)
+        # user before logout
+        user = request.user
 
         create_log(
-            request.user,
+            user,
             "LOGOUT",
             "ACCOUNT",
-            request.user.id,
-            request.user.mobile
+            user.id,
+            user.mobile
         )
+
+        # session logout
+        logout(request)
 
         return Response(
             {"detail": "Successfully logged out"},
