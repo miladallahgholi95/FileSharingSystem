@@ -4,9 +4,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, LogoutSerializer
 from activity_logs.services import create_log
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 
 class MobileTokenSerializer(TokenObtainPairSerializer):
     username_field = "mobile"
@@ -32,6 +32,32 @@ class RegisterView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = serializer.save()
         create_log(user, "REGISTER", "ACCOUNT", user.id, user.mobile)
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        # session logout
+        logout(request)
+
+        create_log(
+            request.user,
+            "LOGOUT",
+            "ACCOUNT",
+            request.user.id,
+            request.user.mobile
+        )
+
+        return Response(
+            {"detail": "Successfully logged out"},
+            status=status.HTTP_200_OK
+        )
 
 class ProfileView(APIView):
     def get(self, request):

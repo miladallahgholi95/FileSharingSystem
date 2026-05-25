@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from .models import User
 
@@ -32,3 +33,12 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         validate_password(value)
         return value
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def save(self, **kwargs):
+        refresh_token = self.validated_data["refresh"]
+
+        token = RefreshToken(refresh_token)
+        token.blacklist()
