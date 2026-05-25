@@ -40,7 +40,7 @@ class FolderSerializer(serializers.ModelSerializer):
         return {
             "is_owned": obj.owner == user,
             "access_level": access,
-            "is_shared": is_folder_shared(obj, user)
+            "is_shared": is_folder_shared(obj, obj.owner)
         }
 
 
