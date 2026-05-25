@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Folder, File, FolderPermission, FilePermission
-from .services import get_folder_access, get_file_access
+from .services import get_folder_access, get_file_access, is_folder_shared
 import jdatetime
 
 
@@ -37,17 +37,12 @@ class FolderSerializer(serializers.ModelSerializer):
 
         access, origin = get_folder_access(user, obj)
 
-        is_shared = FolderPermission.objects.filter(
-            folder=obj
-        ).exclude(
-            user=user
-        ).exists()
-
         return {
             "is_owned": obj.owner == user,
             "access_level": access,
-            "is_shared": is_shared
+            "is_shared": is_folder_shared(obj, user)
         }
+
 
 class FileSerializer(serializers.ModelSerializer):
 
