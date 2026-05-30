@@ -1,11 +1,20 @@
 from rest_framework import serializers
 from .models import Folder, File, FolderPermission, FilePermission
+from accounts.models import User
 from .services import get_folder_access, get_file_access, is_folder_shared
 import jdatetime
 
+class OwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+        )
 
 class FolderSerializer(serializers.ModelSerializer):
-
+    owner = OwnerSerializer(read_only=True)
     visibility = serializers.SerializerMethodField()
 
     created_at_shamsi = serializers.SerializerMethodField()
@@ -45,7 +54,7 @@ class FolderSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
-
+    owner = OwnerSerializer(read_only=True)
     visibility = serializers.SerializerMethodField()
 
     created_at_shamsi = serializers.SerializerMethodField()
